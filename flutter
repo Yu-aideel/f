@@ -1,0 +1,133 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_013/model/Transaction.dart';
+import 'package:flutter_013/providers/transaction_provider.dart';
+import 'package:provider/provider.dart';
+
+class FormScreen extends StatefulWidget {
+  FormScreen({Key? key}) : super(key: key);
+
+  @override
+  _FormScreenState createState() => _FormScreenState();
+}
+
+class _FormScreenState extends State<FormScreen> {
+  final titleController = TextEditingController();
+  final authorController = TextEditingController();
+  final dateController = TextEditingController();
+  final priceController = TextEditingController();
+  String dropdownValue = 'a';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("เพิ่มหนังสือ"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Form(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                decoration: InputDecoration(labelText: "ชื่อ สกุล"),
+                autofocus: true,
+                controller: titleController,
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: "เพศ"),
+                controller: authorController,
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: "วันเดือนปีเกิด"),
+                controller: dateController,
+                onTap: () async {
+                  DateTime? selectedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2101),
+                  );
+                  if (selectedDate != null) {
+                    dateController.text = selectedDate.toString();
+                  }
+                },
+              ),
+              DropdownButton<String>(
+                value: dropdownValue,
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      dropdownValue = newValue;
+                    });
+                  }
+                },
+                items: <String>['a', 'b', 'c'].map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: "เงินเดือน"),
+                keyboardType: TextInputType.number,
+                controller: priceController,
+              ),
+              TextButton(
+                style: ButtonStyle(
+                  foregroundColor:
+                      MaterialStateProperty.all<Color>(Colors.blue),
+                ),
+                onPressed: () {
+                  var title = titleController.text;
+                  var author = authorController.text;
+                  var dateText = dateController.text;
+                  var priceText = priceController.text;
+
+                  // Validate and parse the price
+                  if (priceText.isEmpty) {
+                    // Handle empty price input here
+                    // You can show an error message or take appropriate action
+                    return;
+                  }
+
+                  double? price;
+                  try {
+                    price = double.parse(priceText);
+                  } catch (e) {
+                    // Handle invalid price input here
+                    // You can show an error message or take appropriate action
+                    return;
+                  }
+
+                  var date = DateTime.tryParse(dateText);
+
+                  if (date == null) {
+                    // Handle invalid date input here
+                    // You can show an error message or take appropriate action
+                    return;
+                  }
+
+                  Transactions statement = Transactions(
+                    title: title,
+                    author: author,
+                    date: date,
+                    category: dropdownValue,
+                    price: price,
+                  );
+
+                  var provider =
+                      Provider.of<TransactionProvider>(context, listen: false);
+                  provider.addTransaction(statement);
+                  Navigator.pop(context);
+                },
+                child: Text("เพิ่มข้อมูล"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
